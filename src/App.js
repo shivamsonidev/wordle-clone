@@ -14,7 +14,25 @@ const TableRow = ({ word, wordOfTheDay, submitted }) => {
   )
 }
 
+const Keyboard = ({ attempts, attemptCounter, wordOfTheDay, typed }) => {
+  const rows = [
+    ['q','w','e','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l'],
+    ['Enter','z','x','c','v','b','n','m','Backspace']
+  ]
+  let called = []
+  attemptCounter > 0 && attempts.map((attempt, index) => index < attemptCounter && attempt.split('').map((key) => !called.includes(key) && called.push(key)))
+  return (
+    rows.map((keys,index) => <div key={index} style={{ paddingBottom: '3px', display: 'block'}}>
+      {keys.map((key, i) => <div style={{ padding: '2.5px', display: 'inline-block', border: '1px solid black', borderRadius:'5px', marginLeft: '2.5px', marginRight: '2.5px', height: '32px', width: key.length > 1 ? 'initial' : '30px', background: wordOfTheDay.includes(key) && called.includes(key) ?  'azure' : called.includes(key) ? '#222' : 'slategray', color: wordOfTheDay.includes(key) && called.includes(key) ? 'black' : 'white', cursor: 'pointer'}} key={i} onClick={()=>typed(key)}>
+        <p style={{ textTransform: key.length > 1 ? 'initial' : 'uppercase', margin: 0, textAlign: 'center', fontSize:"1rem", marginTop: '5px' }}>{key}</p>
+      </div>)}
+    </div>)
+  )
+}
+
 function App() {
+  const [words,setWords] = useState([''])
   const [wordOfTheDay,setWordOfTheDay] = useState('')
   const [attempts,setAttempts] = useState(Array(ATTEMPT_LIMIT).fill(''))
   const [attemptCounter,setAttemptCounter] = useState(0)
@@ -22,34 +40,13 @@ function App() {
   const [error,setError] = useState('')
   const [pressed, setPressed] = useState(false)
   const [won, setWon] = useState(false)
-
-  const submitWord = () => {
-    if(!won) {
-      if(attemptCounter < ATTEMPT_LIMIT) {
-        if(currentWord.length === WORD_LIMIT) {
-          let temp_attempts = attempts;
-          temp_attempts[attemptCounter] = currentWord;
-          setAttempts(temp_attempts)
-          setAttemptCounter(attemptCounter+1)
-          setCurrentWord('')
-          setWon(currentWord === wordOfTheDay)
-        }
-        else {
-          setError('Please put all letters\n')
-        }
-      }
-      else {
-        setError('All attempts exhausted\n')
-      }
-    }
-    return
-  }
   
   useEffect(()=> {
     let fetchWords = async () => {
       let data = await fetch(API_URL)
       let words = await data.json()
-      words = await words.filter(word => word.length === WORD_LIMIT)    
+      words = await words.filter(word => word.length === WORD_LIMIT)
+      setWords(words)    
       setWordOfTheDay(words[Math.round(Math.random() * (words.length))])
     };
     fetchWords();
@@ -65,9 +62,6 @@ function App() {
           temp_word = temp_word + letter
           setCurrentWord(temp_word);
         }
-        else {
-          setError('Only 5 letter words accepted\n')
-        }
       }
       if(letter==="Backspace" && currentWord.length > 0) {
         let temp_word = currentWord;
@@ -75,17 +69,39 @@ function App() {
         setCurrentWord(temp_word);
       }    
       if(letter==="Enter") {
-        submitWord()
+        if(!won) {
+          if(attemptCounter < ATTEMPT_LIMIT) {
+            if(currentWord.length === WORD_LIMIT) {
+              if(!words.includes(currentWord)) {
+                setError('Not in word list\n')
+              }
+              else {
+                let temp_attempts = attempts;
+                temp_attempts[attemptCounter] = currentWord;
+                setAttempts(temp_attempts)
+                setAttemptCounter(attemptCounter+1)
+                setCurrentWord('')
+                setWon(currentWord === wordOfTheDay)
+              }
+            }
+            else {
+              setError('Please put all letters\n')
+            }
+          }
+          else {
+            setError('All attempts exhausted\n')
+          }
+        }
       }
       setPressed('');
     }
     return
-  },[pressed]);
+  },[pressed, currentWord, won, attemptCounter, attempts, wordOfTheDay]);
   
   useEffect(()=> {
     setTimeout(()=>{
       setError('');
-    }, 4000)
+    }, 3000)
   },[error]);
 
   return (
@@ -94,14 +110,16 @@ function App() {
         <h1>WORDLE</h1>
         {wordOfTheDay==='' ? 'Loading...' :
         <div>          
-          {attempts.map((word, index) => word!=='' && <TableRow word={word} wordOfTheDay={wordOfTheDay} key={index} submitted={true} />)}
-          {attemptCounter<ATTEMPT_LIMIT && <TableRow word={currentWord} wordOfTheDay={wordOfTheDay} submitted={false} />}
-          {attemptCounter<ATTEMPT_LIMIT && Array(ATTEMPT_LIMIT - attempts.indexOf('') - 1).fill(1).map((el, index) => <TableRow word='' wordOfTheDay={wordOfTheDay} key={index} />)}
-          {error && <p style={{ color: 'white', fontSize: '0.75rem' }}>{error}</p>}
-
+          {error && <div style={{ position: 'fixed', top: '30px', left: 0, right: 0 }}><p style={{ display: 'inline-block', color: 'black', background: 'white', fontSize: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '0.75rem' }}>{error}</p></div>}
           {won && <p style={{ color: 'yellow', fontSize: '0.75rem' }}>Victory!</p>}
           {!won && <p style={{ color: 'white', fontSize: '0.75rem' }}>{ATTEMPT_LIMIT - attemptCounter} attempts left</p>}
           {attemptCounter===ATTEMPT_LIMIT && !won && <p style={{ color: 'yellow', fontSize: '0.75rem' }}>Sorry, the word was {wordOfTheDay}</p>}
+
+          {attempts.map((word, index) => word!=='' && <TableRow word={word} wordOfTheDay={wordOfTheDay} key={index} submitted={true} />)}
+          {attemptCounter<ATTEMPT_LIMIT && <TableRow word={currentWord} wordOfTheDay={wordOfTheDay} submitted={false} />}
+          {attemptCounter<ATTEMPT_LIMIT && Array(ATTEMPT_LIMIT - attempts.indexOf('') - 1).fill(1).map((el, index) => <TableRow word='' wordOfTheDay={wordOfTheDay} key={index} />)}<br/>
+          <Keyboard attempts={attempts} attemptCounter={attemptCounter} wordOfTheDay={wordOfTheDay} typed={(key)=>setPressed(key)} />
+          <p style={{ color: 'white', fontSize: '0.75rem' }}>By Shivam Soni</p>
         </div>}
       </div>
     </div>
