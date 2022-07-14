@@ -24,8 +24,8 @@ const Keyboard = ({ attempts, attemptCounter, wordOfTheDay, typed }) => {
   attemptCounter > 0 && attempts.map((attempt, index) => index < attemptCounter && attempt.split('').map((key) => !called.includes(key) && called.push(key)))
   return (
     rows.map((keys,index) => <div key={index} style={{ paddingBottom: '3px', display: 'block'}}>
-      {keys.map((key, i) => <div style={{ padding: '2.5px', display: 'inline-block', border: '1px solid black', borderRadius:'5px', marginLeft: '2.5px', marginRight: '2.5px', height: '32px', width: key.length > 1 ? 'initial' : '30px', background: wordOfTheDay.includes(key) && called.includes(key) ?  'azure' : called.includes(key) ? '#222' : 'slategray', color: wordOfTheDay.includes(key) && called.includes(key) ? 'black' : 'white', cursor: 'pointer'}} key={i} onClick={()=>typed(key)}>
-        <p style={{ textTransform: key.length > 1 ? 'initial' : 'uppercase', margin: 0, textAlign: 'center', fontSize:"1rem", marginTop: '5px' }}>{key}</p>
+      {keys.map((key, i) => <div style={{ padding: '2.5px', display: 'inline-block', border: '1px solid black', borderRadius:'5px', marginLeft: '2.5px', marginRight: '2.5px', height: '27px', width: key.length > 1 ? 'initial' : '25px', background: wordOfTheDay.includes(key) && called.includes(key) ?  'azure' : called.includes(key) ? '#222' : 'slategray', color: wordOfTheDay.includes(key) && called.includes(key) ? 'black' : 'white', cursor: 'pointer'}} key={i} onClick={()=>typed(key)}>
+        <p style={{ textTransform: key.length > 1 ? 'initial' : 'uppercase', margin: 0, textAlign: 'center', fontSize:"0.7rem", marginTop: '5px' }}>{key}</p>
       </div>)}
     </div>)
   )
@@ -96,7 +96,7 @@ function App() {
       setPressed('');
     }
     return
-  },[pressed, currentWord, won, attemptCounter, attempts, wordOfTheDay]);
+  },[pressed, currentWord, won, words, attemptCounter, attempts, wordOfTheDay]);
   
   useEffect(()=> {
     setTimeout(()=>{
